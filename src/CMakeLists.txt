@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(gflags REQUIRED)
+#find_package(gflags REQUIRED)
 
 add_subdirectory(wave)
 add_subdirectory(dsp)

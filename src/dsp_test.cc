@@ -10,11 +10,11 @@ DEFINE_uint32(bit_rate, 16, "bit rate");
 DEFINE_uint32(num_channels, 1, "number of channels");
 
 DEFINE_string(input_file_name, "", "name of input file");
-DEFINE_string(output_file_name, "", "name of output file");
+//DEFINE_string(output_file_name, "", "name of output file");
 
 int main(int argc, char **argv) {
 
-  gflags::SetUsageMessage("NrFile");
+  gflags::SetUsageMessage("dsp_test");
   gflags::SetVersionString("1.0.0");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -46,16 +46,13 @@ int main(int argc, char **argv) {
     return error_code;
   }
 
-  //const unsigned int feat_dim = param.num_fft_point / 2 + 1;
-  //const unsigned int feat_dim = param.num_mels;
   const unsigned int feat_dim = param.num_mfcc;
   const unsigned int step_size = (unsigned int)(0.01 * (float)sampling_rate);
   const unsigned int num_frame = (num_samples - param.window_size) / step_size;
 
-  FILE* fp_out = fopen(FLAGS_output_file_name.c_str(), "wb");
-  //fprintf(fp_out, "%d %d ", num_frame, feat_dim);
-  fwrite(&num_frame, sizeof(const unsigned int), 1, fp_out);
-  fwrite(&feat_dim, sizeof(const unsigned int), 1, fp_out);
+  //FILE* fp_out = fopen(FLAGS_output_file_name.c_str(), "wb");
+  //fwrite(&num_frame, sizeof(const unsigned int), 1, fp_out);
+  //fwrite(&feat_dim, sizeof(const unsigned int), 1, fp_out);
   dsp::float_t *mfcc = new dsp::float_t[feat_dim];
   for (unsigned int i = 0; i < num_frame; i++) {
     error_code = extractor.mfcc(data + i * step_size, mfcc);
@@ -63,15 +60,12 @@ int main(int argc, char **argv) {
       return error_code;
     }
 
-    fwrite(mfcc, sizeof(dsp::float_t), feat_dim, fp_out);
-    //for (unsigned int j = 0; j < feat_dim; j++) {
-    //  fprintf(fp_out, "%f ", mfcc[j]);
-    //}
+    //fwrite(mfcc, sizeof(dsp::float_t), feat_dim, fp_out);
   }
   gflags::ShutDownCommandLineFlags();
 
   delete[] data;
   delete[] mfcc;
-  fclose(fp_out);
+  //fclose(fp_out);
   return 0;
 }

@@ -7,4 +7,5 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLGAS_RELEASE "-Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -ggdb -g -DDEBUG")
 
+add_subdirectory(third_party/gflags)
 add_subdirectory(src)

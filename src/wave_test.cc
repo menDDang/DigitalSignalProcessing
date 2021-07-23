@@ -13,7 +13,7 @@ DEFINE_string(output_file_name, "", "name of output file");
 
 int main(int argc, char** argv) {
 
-    gflags::SetUsageMessage("NrFile");
+    gflags::SetUsageMessage("wave_test");
     gflags::SetVersionString("1.0.0");        
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
