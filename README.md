@@ -17,6 +17,27 @@ C++로 제작한 Digital Signal Processing 라이브러리 및 binary 실행 파
 * [x] set 16kHz default parameter 
 * [ ] multi threading (추후 업데이트 예정)
 
+**Example**
+=====
+*fextor*
+-----
+get helping messages
+
+`$ fextor --helpshort`
+
+simple example
+
+`$ input_file_name=input_16k_16bit.wav`
+`$ output_file_name=sample_mfcc.feat`
+`$ fextor --input ${input_file_name} --output ${output_file_name}`
+
+*python*
+-----
+fextor를 통해 추출된 파일을 python에서 load 및 plot 할 수 있습니다.
+
+`$ input_file_name=sample_mfcc.feat`
+`$ output_file_name=sample_plot.png`
+`$ python plot_feature.py -i ${input_file_name} -o ${output_file_name}`
 
 **Build**
 =====
