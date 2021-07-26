@@ -29,6 +29,9 @@ typedef struct feature_extractor_init_param_t {
   window_type_t window_type;
   unsigned int window_size;   // Number of samples in one frame, 
                               // usually 0.02 seconds.
+  unsigned int step_size;     // Number of samples in one step,
+                              // usually 0.01 seconds
+                              
   unsigned int num_fft_point; // Number of fft points, must be power of 2 and
                               // larger than `window_size`.
   unsigned int num_mels;      // Dimension of mel filter bank outputs, 

@@ -40,6 +40,7 @@ int setDefaultParam(const unsigned int sampling_rate, FEInitParam* param) {
   param->sampling_rate = sampling_rate;
   param->window_type = kWindowTypeHanning;
   param->window_size = 0.02 * sampling_rate;
+  param->step_size = 0.01 * sampling_rate;
   param->is_center = true;
   param->min_hertz = 0;
   param->max_hertz = sampling_rate / 2;
