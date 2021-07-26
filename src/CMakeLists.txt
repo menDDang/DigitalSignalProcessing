@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
+project(fextor VERSION 1.0.0)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -14,5 +15,5 @@ target_link_libraries(wave_test PRIVATE wave_obj gflags)
 add_executable(dsp_test dsp_test.cc)
 target_link_libraries(dsp_test PRIVATE wave_obj dsp_obj gflags)
 
-#add_executable(NrTest nrTest.cpp)
-#target_link_libraries(NrTest PRIVATE utils_static audio_static dsp_static gflags)
+add_executable(fextor fextor.cc fextor_app.cc)
+target_link_libraries(fextor PRIVATE wave_obj dsp_obj gflags)
