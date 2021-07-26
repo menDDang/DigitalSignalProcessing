@@ -41,16 +41,23 @@ fextor를 통해 추출된 파일을 python에서 load 및 plot 할 수 있습�
 
 **Build**
 =====
-mkdir build && cd build \
-cmake .. \
-make
+`fextor` is built and tested in following environments : \
+Ubuntu 18.04 \
+g++ 7.5.0 \
+cmake 3.13.4 \
+
+how to build:
+
+`$ mkdir build && cd build` \
+`$ cmake ..` \
+`$ make`
 
 **Test**
 =====
-build/bin/dsp_test --input_file_name ${input_file_name}
+`$ build/bin/dsp_test --input_file_name ${input_file_name}`
 
 **Availabe cmake options**
-
+=====
 | options | description | default |
 | ------ | ------ | ----- |
 | USE_DOUBLE_PRECISION | using `double` type instead of `float` | OFF |
