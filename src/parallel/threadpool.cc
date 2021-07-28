@@ -9,69 +9,91 @@
 
 namespace parallel {
 
-typedef struct job_t {
-  void (*function_)(void *);
-  void *arg_;
 
-  job_t() : function_(NULL), arg_(NULL){};
-
-  job_t(void (*function)(void *), void *arg) : function_(function), arg_(arg){};
-
-  ~job_t(){};
-
-} Job;
-
-
-ThreadPool::ThreadPool(const unsigned int num_threads)
-    : num_threads_(num_threads), is_stopped_(false) {
-  worker_threads_.reserve(num_threads_);
-  for (unsigned int i = 0; i < num_threads_; i++) {
-    worker_threads_[i] = std::thread(runThread, (void *)this);
+ThreadPool::ThreadPool(const unsigned int num_threads) 
+    : num_running_threads_(0)
+    , num_processed_(0)
+    , is_stopped_(false) {
+  
+  workers_.resize(num_threads);
+  for (unsigned int i = 0; i < num_threads; i++) {
+    workers_[i] = std::thread(runThread, this);
+    //workers_.emplace_back(std::bind(&ThreadPool::runThread, this));
   }
 }
 
 ThreadPool::~ThreadPool() {
-  is_stopped_ = true;
-  cv_job_queue_.notify_all();
-  for (auto &thread : worker_threads_) {
-    thread.join();
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+    is_stopped_ = true;
+    cv_job_added_.notify_all();
   }
+
+  for (auto& thread : workers_) {
+    thread.join();
+  } 
 }
 
-void ThreadPool::runThread() {
-  Job* job;
+void ThreadPool::runThread(ThreadPool* pool_) {
+  ThreadPool *pool = (pool_);
+  void (*fn)(void*);
+  void* arg;
   while (true) {
     { // Critical section
-      std::unique_lock<std::mutex> lock(mutex_get_job_);
-      cv_job_queue_.wait(lock, [this]() {
-        return (!this->job_queue_.empty()) || (this->is_stopped_);
-      });
-      if (is_stopped_ && job_queue_.empty()) {
+      std::unique_lock<std::mutex> lock(pool->queue_mutex_);
+      pool->cv_job_added_.wait(
+        lock, [pool](){ return pool->is_stopped_ || !pool->job_queue_.empty(); });
+      
+      if (pool->is_stopped_) {
         break;
       }
+      if (!pool->job_queue_.empty()) {
+        pool->num_running_threads_++;
+        
+        auto job = pool->job_queue_.front().get();
+        fn = job->function_;
+        arg = job->arg_;
+        pool->job_queue_.pop();
+      }
+    } // end of critictal section
 
-      job = job_queue_.front();
-      job_queue_.pop();
-    } // End of critical section
-
-    job->function_(job->arg_);
+    fn(arg);
+    pool->num_processed_++;
+      
+    { // Critical section
+      std::unique_lock<std::mutex> lock(pool->queue_mutex_);
+      pool->num_running_threads_--;
+      pool->cv_job_finished_.notify_one();
+    } // end of critictal section
   }
 }
 
 void ThreadPool::addJob(void (*function)(void *), void *arg) {
+  if (arg == NULL) {
+    throw std::runtime_error("ThreadPool::addJob() - `job` is NULL.\n");
+  }
 
   if (is_stopped_) {
     throw std::runtime_error("ThreadPool is already stopped.\n");
   }
 
   { // Critical section
-    std::unique_lock<std::mutex> lock(mutex_get_job_);
+    std::unique_lock<std::mutex> lock(queue_mutex_);
 
-    std::unique_ptr<Job> pJob(new Job(function, arg));
-    job_queue_.push(pJob.get());
+    std::unique_ptr<Job> job(new Job(function, arg));
+    job_queue_.push(std::move(job));
+    cv_job_finished_.notify_one();
   } // End of critical section
+}
 
-  cv_job_queue_.notify_one();
+void ThreadPool::wait() {
+  
+  {  // Critical section
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+    cv_job_finished_.wait(lock, 
+      [this]() { return job_queue_.empty() && (num_running_threads_ == 0); }
+    );
+  }  // End of critical section
 }
 
 } // namespace parallel
