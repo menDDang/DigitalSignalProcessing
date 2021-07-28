@@ -11,7 +11,8 @@
 
 Feature::Feature() 
   : num_frame_(0)
-  , feat_dim_(0) {
+  , feat_dim_(0)
+  , data_(NULL) {
 
 }
 
@@ -23,7 +24,10 @@ Feature::Feature(unsigned int num_frame, unsigned int feat_dim)
 }
 
 Feature::~Feature() {
-
+  if (data_ != NULL) {
+    delete[] data_;
+    data_ = NULL;
+  }
 }
 
 int Feature::load(const char* input_file_name) {
@@ -48,8 +52,13 @@ int Feature::load(const char* input_file_name) {
   }
 
   // read data
-  data_.reset(new dsp::float_t[num_frame_ * feat_dim_]);
-  size_t n = fread(data_.get(), sizeof(dsp::float_t), num_frame_ * feat_dim_, fp_in);
+  if (data_ != NULL) {
+    delete[] data_;
+    data_ = NULL;
+  }
+  data_ = new dsp::float_t[num_frame_ * feat_dim_];
+  //data_.reset(new dsp::float_t[num_frame_ * feat_dim_]);
+  size_t n = fread(data_, sizeof(dsp::float_t), num_frame_ * feat_dim_, fp_in);
   if (n != num_frame_ * feat_dim_) {
     fprintf(stderr, "Feature::load() - failed to load feature data.\n");
     fclose(fp_in);
@@ -57,6 +66,8 @@ int Feature::load(const char* input_file_name) {
   }
 
   fclose(fp_in);
+  //delete[] data_;
+  //data_ = NULL;
   return 0;
 }
 
@@ -81,7 +92,7 @@ int Feature::save(const char* output_file_name) {
   //        sizeof(dsp::float_t));
 
   // write data
-  fwrite(data_.get(), sizeof(dsp::float_t), num_frame_ * feat_dim_, fp_out);
+  fwrite(data_, sizeof(dsp::float_t), num_frame_ * feat_dim_, fp_out);
 
   fclose(fp_out);
   return 0;
@@ -91,11 +102,11 @@ dsp::float_t* Feature::getPtr(const unsigned int index) {
   if (index >= num_frame_ * feat_dim_) {
     return NULL;
   }
-  return data_.get() + index;
+  return data_ + index;
 }
 
 int extractOne(const char* input_wav_name, const char* output_feat_name, 
-               const dsp::FEInitParam& param, dsp::FeatureExtractor& extractor,
+               const dsp::FEInitParam* param, dsp::FeatureExtractor* extractor,
                int target) {
   
   // read wav
@@ -110,18 +121,18 @@ int extractOne(const char* input_wav_name, const char* output_feat_name,
   }
 
   // get number of frames & dimension of each feature
-  unsigned int num_frame = (wav_length - param.window_size) / param.step_size;
+  unsigned int num_frame = (wav_length - param->window_size) / param->step_size;
   unsigned int feat_dim;
   switch (target)
   {
   case FEXTOR_TARGET_SPECTRUM:
-    feat_dim = param.num_fft_point / 2 + 1;
+    feat_dim = param->num_fft_point / 2 + 1;
     break;
   case FEXTOR_TARGET_MEL:
-    feat_dim = param.num_mels;
+    feat_dim = param->num_mels;
     break;
   case FEXTOR_TARGET_MFCC:
-    feat_dim = param.num_mfcc;
+    feat_dim = param->num_mfcc;
     break;
   default:
     fprintf(stderr, "invalid target (given : %d)\n", (int)target);
@@ -133,19 +144,19 @@ int extractOne(const char* input_wav_name, const char* output_feat_name,
   // extract feature
   Feature feat(num_frame, feat_dim);
   for (unsigned int n = 0; n < num_frame; n++) {
-    dsp::float_t* src = wav + n * param.step_size;
+    dsp::float_t* src = wav + n * param->step_size;
     dsp::float_t* dest = feat.getPtr(n * feat_dim);
     
     switch (target)
     {
     case FEXTOR_TARGET_SPECTRUM:
-      error_code = extractor.spectrum(src, dest);
+      error_code = extractor->spectrum(src, dest);
       break;
     case FEXTOR_TARGET_MEL:
-      error_code = extractor.melspectrum(src, dest);
+      error_code = extractor->melspectrum(src, dest);
       break;
     case FEXTOR_TARGET_MFCC:
-      error_code = extractor.mfcc(src, dest);
+      error_code = extractor->mfcc(src, dest);
       break;
     }
 

@@ -22,7 +22,8 @@ public:
 private:
   unsigned int num_frame_;
   unsigned int feat_dim_;
-  std::unique_ptr<dsp::float_t> data_;
+  //std::unique_ptr<dsp::float_t> data_;
+  dsp::float_t *data_;
 
 public:
   int load(const char* input_file_name);
@@ -32,7 +33,7 @@ public:
 };  // Feature
 
 int extractOne(const char* input_wav_name, const char* output_feat_name, 
-               const dsp::FEInitParam& param, dsp::FeatureExtractor& extractor,
+               const dsp::FEInitParam* param, dsp::FeatureExtractor* extractor,
                int target);
 
 #endif // FEXTOR_APP_H
