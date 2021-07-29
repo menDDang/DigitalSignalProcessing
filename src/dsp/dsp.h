@@ -9,7 +9,7 @@
 
 namespace dsp {
 
-#ifdef USE_DOUBLE_PRECISION
+#if USE_DOUBLE_PRECISION
 typedef double float_t;
 #else
 typedef float float_t;
