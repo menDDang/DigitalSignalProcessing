@@ -15,8 +15,7 @@ C++로 제작한 Digital Signal Processing 라이브러리 및 binary 실행 파
 * [x] mel-spectrum
 * [x] mfcc 
 * [x] set 16kHz default parameter 
-* [x] process multiple number of files (with multi threads)
-* [ ] multi threading (추후 업데이트 예정)
+* [x] multi threading
 
 **Example**
 =====
