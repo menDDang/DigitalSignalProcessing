@@ -80,12 +80,10 @@ private:
                      const float_t max_hertz);
   int initDctMatrix(const unsigned int num_mfcc);
 
-  int getMagnitude(const float_t *const wave_frame_data, float_t *magnitude);
-  int getMel(const float_t *const magnitude,
-                          float_t *mel_filter_bank_output);
-  int getMfcc(const float_t *const mel_filter_bank_output,
-              float_t *mfcc_output);
-
+  int getMagnitude(const float_t *const wave_frame_data, float_t *magnitude,
+                   float_t *temp_mem);
+  int getMel(const float_t *const magnitude, float_t *mel_filter_bank_output);
+  int getMfcc(const float_t *const mel_filter_bank_output, float_t *mfcc_output);
 
   unsigned int findFilterBankIndex(float_t hertz);
 
@@ -99,8 +97,9 @@ public:
   // Length of frame data = `window_size_`, dimension of magnitudes =
   // `num_fft_point_` / 2 + 1.
   // If multi threading environment, multi number of threads can access
-  // this function. In this case, since temporary memory is neccessary,
-  // `temp_mem` must be given. 
+  // this function. In this case, since temporary memory is neccessary
+  // in FFT step, `temp_mem` must be given. Note that length of `temp_mem`
+  // must be larger than `num_fft_point` * 2.
   int spectrum(const float_t *const wave_frame_data, float_t *dest,
                const bool logarize_output = false, float_t *temp_mem=NULL);
 
@@ -108,8 +107,9 @@ public:
   // Length of frame data = `window_size_`, dimension of magnitudes =
   // `num_mels_`.
   // If multi threading environment, multi number of threads can access
-  // this function. In this case, since temporary memory is neccessary,
-  // `temp_mem` must be given. 
+  // this function. In this case, since temporary memory is neccessary
+  // in FFT step, `temp_mem` must be given. Note that length of `temp_mem`
+  // must be larger than `num_fft_point` * 2.
   int melspectrum(const float_t *const wave_frame_data, float_t *dest,
                   const bool logarize_output = false, float_t *temp_mem=NULL);
   
@@ -117,8 +117,9 @@ public:
   // Length of frame data = `window_size_`, dimension of mfcc =
   // `num_mfcc_`.
   // If multi threading environment, multi number of threads can access
-  // this function. In this case, since temporary memory is neccessary,
-  // `temp_mem` must be given. 
+  // this function. In this case, since temporary memory is neccessary
+  // in FFT step, `temp_mem` must be given. Note that length of `temp_mem`
+  // must be larger than `num_fft_point` * 2.
   int mfcc(const float_t *const wave_frame_data, float_t *dest, float_t *temp_mem=NULL);
 
 }; // class FeatureExtractor

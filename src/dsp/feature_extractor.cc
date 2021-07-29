@@ -275,7 +275,8 @@ int FeatureExtractor::initDctMatrix(const unsigned int num_mfcc) {
 }
 
 int FeatureExtractor::getMagnitude(const float_t *const wave_frame_data,
-                                   float_t *magnitude) {
+                                   float_t *magnitude,
+                                   float_t *temp_mem) {
   if (wave_frame_data == NULL) {
     fprintf(stderr, "dsp::FeatureExtractor::getMagnitude() - `wave_frame_data` "
                     "must be not NULL.\n");
@@ -286,25 +287,29 @@ int FeatureExtractor::getMagnitude(const float_t *const wave_frame_data,
                     "be not NULL.\n");
     return DSP_INVALID_ARG_VALUE;
   }
-
-  if (tmp_buffer_ == NULL) {
+  if (window_ == NULL) {
     fprintf(stderr, "dsp::FeatureExtractor::getMagnitude() - not initialized. "
                     "call init() first.\n");
     return DSP_INVALID_USAGE;
   }
+  if (temp_mem == NULL) {
+    fprintf(stderr, "dsp::FeatureExtractor::getMagnitude() - `temp_mem` must "
+    "be not NULL.\n");
+    return DSP_INVALID_ARG_VALUE;
+  }
 
   // Apply windowing function
-  memset(tmp_buffer_, 0, sizeof(float_t) * (num_fft_point_ * 2));
+  memset(temp_mem, 0, sizeof(float_t) * (num_fft_point_ * 2));
   unsigned int start_idx = 0;
   if (is_center_) {
     start_idx = (num_fft_point_ - window_size_) / 2;
   }
   for (unsigned int i = 0; i < window_size_; i++) {
-    tmp_buffer_[start_idx + i] = wave_frame_data[i] * window_[i];
+    temp_mem[start_idx + i] = wave_frame_data[i] * window_[i];
   }
 
   // Short-time Fourier transform
-  int error_code = dsp::fft(tmp_buffer_, num_fft_point_);
+  int error_code = dsp::fft(temp_mem, num_fft_point_);
   if (error_code != DSP_SUCCESS) {
     fprintf(stderr,
             "dsp::FeatureExtractor::getMagnitude() - failed to call fft().\n");
@@ -313,8 +318,8 @@ int FeatureExtractor::getMagnitude(const float_t *const wave_frame_data,
 
   // Get magnitudes
   for (unsigned int i = 0; i < num_fft_point_ / 2 + 1; i++) {
-    float_t real = tmp_buffer_[i];
-    float_t image = tmp_buffer_[i + num_fft_point_];
+    float_t real = temp_mem[i];
+    float_t image = temp_mem[i + num_fft_point_];
     magnitude[i] = std::sqrt(real * real + image * image);
   }
 
@@ -390,8 +395,9 @@ int FeatureExtractor::spectrum(const float_t *const wave_frame_data,
                                const bool logarize_output,
                                float_t *temp_mem) {
   int error_code;
+  float_t *tmp = (temp_mem != NULL) ? temp_mem : tmp_buffer_;
 
-  error_code = getMagnitude(wave_frame_data, dest);
+  error_code = getMagnitude(wave_frame_data, dest, tmp);
   if (error_code != DSP_SUCCESS) {
     fprintf(
         stderr,
@@ -413,15 +419,16 @@ int FeatureExtractor::melspectrum(const float_t *const wave_frame_data,
                                   const bool logarize_output,
                                   float_t *temp_mem) {
   int error_code;
+  float_t *tmp = (temp_mem != NULL) ? temp_mem : tmp_buffer_;
 
-  error_code = getMagnitude(wave_frame_data, tmp_buffer_);
+  error_code = getMagnitude(wave_frame_data, tmp, tmp);
   if (error_code != DSP_SUCCESS) {
     fprintf(stderr, "dsp::FeatureExtractor::melspectrum() - failed to call "
                     "getMagnitude().\n");
     return error_code;
   }
 
-  error_code = getMel(tmp_buffer_, dest);
+  error_code = getMel(tmp, dest);
   if (error_code != DSP_SUCCESS) {
     fprintf(
         stderr,
@@ -440,10 +447,11 @@ int FeatureExtractor::melspectrum(const float_t *const wave_frame_data,
 
 int FeatureExtractor::mfcc(const float_t *const wave_frame_data,
                            float_t *dest,
-                           float_t *temp_mem ) {
+                           float_t *temp_mem) {
   int error_code;
+  float_t *tmp = (temp_mem != NULL) ? temp_mem : tmp_buffer_;
 
-  error_code = getMagnitude(wave_frame_data, tmp_buffer_);
+  error_code = getMagnitude(wave_frame_data, tmp, tmp);
   if (error_code != DSP_SUCCESS) {
     fprintf(stderr,
             "dsp::FeatureExtractor::mfcc() - failed to call getMagnitude().\n");
@@ -451,7 +459,7 @@ int FeatureExtractor::mfcc(const float_t *const wave_frame_data,
   }
 
   // if num_fft_point > num_mels, getMel function can be operated in-place.
-  error_code = getMel(tmp_buffer_, tmp_buffer_);
+  error_code = getMel(tmp, tmp);
   if (error_code != DSP_SUCCESS) {
     fprintf(stderr,
             "dsp::FeatureExtractor::mfcc() - failed to call getMel().\n");
@@ -459,10 +467,10 @@ int FeatureExtractor::mfcc(const float_t *const wave_frame_data,
   }
 
   for (unsigned int i = 0; i < num_mels_; i++) {
-    tmp_buffer_[i] = logarize(tmp_buffer_[i]);
+    tmp[i] = logarize(tmp[i]);
   }
 
-  error_code = getMfcc(tmp_buffer_, dest);
+  error_code = getMfcc(tmp, dest);
   if (error_code != DSP_SUCCESS) {
     fprintf(stderr,
             "dsp::FeatureExtractor::mfcc() - failed to call getMfcc().\n");
