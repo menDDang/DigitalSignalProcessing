@@ -141,6 +141,8 @@ int extractOne(const char* input_wav_name, const char* output_feat_name,
     break;
   }
 
+  dsp::float_t *temp_mem = new dsp::float_t[param->num_fft_point * 2];
+
   // extract feature
   Feature feat(num_frame, feat_dim);
   for (unsigned int n = 0; n < num_frame; n++) {
@@ -150,20 +152,19 @@ int extractOne(const char* input_wav_name, const char* output_feat_name,
     switch (target)
     {
     case FEXTOR_TARGET_SPECTRUM:
-      error_code = extractor->spectrum(src, dest);
+      error_code = extractor->spectrum(src, dest, false, temp_mem);
       break;
     case FEXTOR_TARGET_MEL:
-      error_code = extractor->melspectrum(src, dest);
+      error_code = extractor->melspectrum(src, dest, false, temp_mem);
       break;
     case FEXTOR_TARGET_MFCC:
-      error_code = extractor->mfcc(src, dest);
+      error_code = extractor->mfcc(src, dest, temp_mem);
       break;
     }
 
     if (error_code != DSP_SUCCESS) {
       fprintf(stderr, "failed to extract feature\n");
-      delete[] wav;
-      return error_code;
+      goto EXIT;
     }
   }
   
@@ -171,10 +172,10 @@ int extractOne(const char* input_wav_name, const char* output_feat_name,
   error_code = feat.save(output_feat_name);
   if (error_code != 0) {
     fprintf(stderr, "failed to save feature.\n");
-    delete[] wav;
-    return error_code;
   }
 
+EXIT:
   delete[] wav;
-  return 0;
+  delete[] temp_mem;
+  return error_code;
 }

@@ -149,9 +149,8 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Task failed.\n");
     }
 
-    return error_code;
   }
 
-
-    gflags::ShutDownCommandLineFlags();
+  gflags::ShutDownCommandLineFlags();
+  return error_code;
 }
