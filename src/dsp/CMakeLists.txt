@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(dsp VERSION 1.0)
 
-#add_library(fft_obj OBJECT fft.cc)
+option(USE_DOUBLE_PRECISION off)
 
-#add_library(feature_extractor_obj OBJECT feature_extractor.cc)
-#target_link_libraries(feature_extractor_obj PUBLIC fft_obj)
-#add_dependencies(feature_extractor_obj fft_obj)
-
+message("USE_DOUBLE_PRECISION : ${USE_DOUBLE_PRECISION}")
 
 add_library(dsp_obj OBJECT fft.cc feature_extractor.cc)
+target_compile_definitions(dsp_obj PUBLIC USE_DOUBLE_PRECISION=${USE_DOUBLE_PRECISION})
+
+add_library(dsp_static STATIC $<TARGET_OBJECTS:dsp_obj>)
