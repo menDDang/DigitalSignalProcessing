@@ -44,7 +44,12 @@ int Feature::load(const char* input_file_name) {
 
   // read header
   unsigned long size;
-  fscanf(fp_in, "%u%u%lu", &num_frame_, &feat_dim_, &size);
+  int ret = fscanf(fp_in, "%u%u%lu", &num_frame_, &feat_dim_, &size);
+  if (ret != 0) {
+    fprintf(stderr, "Feature::load() - failed to read header.\n");
+    fclose(fp_in);
+    return ret;
+  }
   if (size != sizeof(dsp::float_t)) {
     fprintf(stderr, "Feature::load() - size of data are unmatched.\n");
     fclose(fp_in);
@@ -66,8 +71,6 @@ int Feature::load(const char* input_file_name) {
   }
 
   fclose(fp_in);
-  //delete[] data_;
-  //data_ = NULL;
   return 0;
 }
 
