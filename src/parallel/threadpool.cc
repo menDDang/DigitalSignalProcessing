@@ -82,7 +82,7 @@ void ThreadPool::addJob(void (*function)(void *), void *arg) {
 
     std::unique_ptr<Job> job(new Job(function, arg));
     job_queue_.push(std::move(job));
-    cv_job_finished_.notify_one();
+    cv_job_added_.notify_one();
   } // End of critical section
 }
 
