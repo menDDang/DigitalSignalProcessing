@@ -18,7 +18,7 @@ def load_feature(filename):
       if size == 4:
         x = [struct.unpack('f', f.read(4))[0] for i in range(feat_dim)]
       elif size == 8:
-        x = [struct.unpack('d', f.read(4))[0] for i in range(feat_dim)]
+        x = [struct.unpack('d', f.read(8))[0] for i in range(feat_dim)]
       else:
         raise ValueError("load_feature() - size must be 4 or 8.")
       feats.append(x)
