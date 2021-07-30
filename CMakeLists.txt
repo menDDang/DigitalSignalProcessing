@@ -9,7 +9,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Wall -ggdb -g -DDEBUG")
 
 option(USE_DOUBLE_PRECISION off)
 
-add_compile_definitions(PUBLIC USE_DOUBLE_PRECISION=${USE_DOUBLE_PRECISION})
+#add_compile_definitions(USE_DOUBLE_PRECISION=${USE_DOUBLE_PRECISION})
+add_definitions(-DUSE_DOUBLE_PRECISION=${USE_DOUBLE_PRECISION})
 
 add_subdirectory(third_party/gflags)
 add_subdirectory(src)
